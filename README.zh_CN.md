@@ -1,12 +1,10 @@
 # Development Tool Kit AI
 
-Qt-based development library for AI on Deepin.
+基于Qt风格的 Deepin AI 开发库。
 
-中文说明：[README.zh_CN.md](./README.zh_CN.md)
+## 依赖
 
-## Dependencies
-
-### Build dependencies
+### 编译依赖
 
 -  cmake,
 -  pkg-config,
@@ -15,11 +13,12 @@ Qt-based development library for AI on Deepin.
 -  qttools5-dev,
 -  libdtkcore-dev
 
-## Build and install
+## 构建安装
 
-### Build from source code
+### 从源码构建
 
-1. Make sure you have installed all dependencies.
+1. 确保已经安装了所有的编译依赖.
+
 
    ```bash
    git clone https://github.com/linuxdeepin/dtkai
@@ -27,26 +26,27 @@ Qt-based development library for AI on Deepin.
    sudo apt build-dep ./
    ```
 
-2. Build
+2. 构建
+
 
    ```bash
    cmake -B build -DCMAKE_INSTALL_PREFIX=/usr
    cmake --build build
    ```
 
-### Install
+### 安装
 
 ```bash
 sudo cmake --build build --target install
 ```
 
-### Runtime dependencies
+### 运行时依赖
 
 - deepin-ai-daemon (>= 2.0.0)
 
-## Getting help
+## 帮助
 
-Any usage issues can ask for help via
+任何使用问题都可以通过以下方式寻求帮助:
 
 * [Telegram group](https://t.me/deepin)
 * [Matrix](https://matrix.to/#/#deepin-community:matrix.org)
@@ -54,12 +54,12 @@ Any usage issues can ask for help via
 * [Forum](https://bbs.deepin.org)
 * [WiKi](https://wiki.deepin.org/)
 
-## Getting involved
+## 参与贡献
 
-We encourage you to report issues and contribute changes
+我们鼓励您报告问题并作出更改
 
-* [Contribution guide for developers](https://github.com/linuxdeepin/developer-center/wiki/Contribution-Guidelines-for-Developers-en).
+* [开发者代码贡献指南](https://github.com/linuxdeepin/developer-center/wiki/Contribution-Guidelines-for-Developers)
 
-## License
+## 协议
 
-Development Tool Kit is licensed under [LGPL-3.0-or-later](LICENSE).
+DTK工具包遵循协议 [LGPL-3.0-or-later](LICENSE).
