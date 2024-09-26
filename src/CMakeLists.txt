@@ -12,7 +12,7 @@ file(GLOB_RECURSE SRCS
 
 qt5_add_dbus_interface(DBUS_FILES ${CMAKE_SOURCE_DIR}/3rdparty/aidaemon/org.deepin.ai.daemon.apiserver.xml aidaemon_apiserver)
 qt5_add_dbus_interface(DBUS_FILES ${CMAKE_SOURCE_DIR}/3rdparty/aidaemon/org.deepin.ai.daemon.apisession.chat.xml aidaemon_apisession_chat)
-
+qt5_add_dbus_interface(DBUS_FILES ${CMAKE_SOURCE_DIR}/3rdparty/aidaemon/org.deepin.ai.daemon.apisession.functioncalling.xml aidaemon_apisession_functioncalling)
 
 message(${DBUS_FILES})
 

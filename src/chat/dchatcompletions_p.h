@@ -6,7 +6,6 @@
 #define DCHATCOMPLETIONS_P_H
 
 #include "dchatcompletions.h"
-#include "aidaemon_apiserver.h"
 #include "aidaemon_apisession_chat.h"
 
 DAI_BEGIN_NAMESPACE

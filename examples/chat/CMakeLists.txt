@@ -21,6 +21,11 @@ add_executable(
     chat_stream.cpp
 )
 
+add_executable(
+    functioncalling
+    functioncalling.cpp
+)
+
 target_link_libraries(
     chat PRIVATE
     ${DtkCore_LIBRARIES}
@@ -29,6 +34,12 @@ target_link_libraries(
 
 target_link_libraries(
     chat_stream PRIVATE
+    ${DtkCore_LIBRARIES}
+    dtkai
+)
+
+target_link_libraries(
+    functioncalling PRIVATE
     ${DtkCore_LIBRARIES}
     dtkai
 )
