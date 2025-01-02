@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
 
     QString response;
     QEventLoop loop;
-    QObject::connect(&chat, &DChatCompletions::StreamFinished, &loop, &QEventLoop::quit);
+    QObject::connect(&chat, &DChatCompletions::streamFinished, &loop, &QEventLoop::quit);
     QObject::connect(&chat, &DChatCompletions::streamOutput, [&chat, &response](const QString &text){
         std::cout << text.toStdString();
         response.append(text);

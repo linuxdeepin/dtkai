@@ -81,7 +81,7 @@ void DChatCompletionsPrivate::finished(int err, const QString &content)
     error.setErrorMessage(err == 0 ? QString() : content);
     lk.unlock();
 
-    emit q->StreamFinished(err);
+    emit q->streamFinished(err);
 }
 
 DChatCompletions::DChatCompletions(QObject *parent)

@@ -28,7 +28,7 @@ public:
     DTK_CORE_NAMESPACE::DError lastError() const;
 Q_SIGNALS:
     void streamOutput(const QString &content);
-    void StreamFinished(int error);
+    void streamFinished(int error);
 private:
     QScopedPointer<DChatCompletionsPrivate> d;
 };
