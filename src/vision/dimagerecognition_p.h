@@ -19,10 +19,7 @@ public:
     bool ensureServer();
     static QString packageParams(const QVariantHash &params);
     
-public Q_SLOTS:
-    void onRecognitionResult(const QString &sessionId, const QString &result);
-    void onRecognitionError(const QString &sessionId, int errorCode, const QString &errorMessage);
-    void onRecognitionCompleted(const QString &sessionId, const QString &finalResult);
+
     
 public:
     QMutex mtx;

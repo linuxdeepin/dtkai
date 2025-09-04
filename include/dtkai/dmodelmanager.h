@@ -5,11 +5,11 @@
 #ifndef DMODELMANAGER_H
 #define DMODELMANAGER_H
 
-#include <QStringList>
-#include <QVariantHash>
-
 #include "dtkai_global.h"
 #include "dtkaitypes.h"
+
+#include <QStringList>
+#include <QVariantHash>
 
 DAI_BEGIN_NAMESPACE
 

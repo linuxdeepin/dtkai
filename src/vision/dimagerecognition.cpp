@@ -2,56 +2,57 @@
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "docrrecognition.h"
-#include "docrrecognition_p.h"
+#include "dimagerecognition.h"
+#include "dimagerecognition_p.h"
 #include "aidaemon_sessionmanager.h"
 #include "daierror.h"
 
 #include <QDBusConnection>
+#include <QFileInfo>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QMutexLocker>
 
 DCORE_USE_NAMESPACE
-DAI_BEGIN_NAMESPACE
+DAI_USE_NAMESPACE
 
 static constexpr int REQ_TIMEOUT = 30000;
 
-DOCRRecognitionPrivate::DOCRRecognitionPrivate(DOCRRecognition *parent)
+DImageRecognitionPrivate::DImageRecognitionPrivate(DImageRecognition *parent)
     : QObject(parent)
     , q(parent)
 {
 }
 
-DOCRRecognitionPrivate::~DOCRRecognitionPrivate()
+DImageRecognitionPrivate::~DImageRecognitionPrivate()
 {
-    if (ocrIfs && !sessionId.isEmpty()) {
-        ocrIfs->terminate();
+    if (imageIfs && !sessionId.isEmpty()) {
+        imageIfs->terminate();
     }
 }
 
-bool DOCRRecognitionPrivate::ensureServer()
+bool DImageRecognitionPrivate::ensureServer()
 {
-    if (ocrIfs.isNull() || !ocrIfs->isValid()) {
+    if (imageIfs.isNull() || !imageIfs->isValid()) {
         QDBusConnection con = QDBusConnection::sessionBus();
         OrgDeepinAiDaemonSessionManagerInterface sessionManager(OrgDeepinAiDaemonSessionManagerInterface::staticInterfaceName(),
                                                                 "/org/deepin/ai/daemon/SessionManager", con);
         if (!sessionManager.isValid())
             return false;
 
-        sessionId = sessionManager.CreateSession("OCR");
+        sessionId = sessionManager.CreateSession("ImageRecognition");
         if (sessionId.isEmpty())
             return false;
 
         QString sessionPath = QString("/org/deepin/ai/daemon/Session/%1").arg(sessionId);
-        ocrIfs.reset(new OrgDeepinAiDaemonSessionOCRInterface(OrgDeepinAiDaemonSessionManagerInterface::staticInterfaceName(), sessionPath, con));
-        ocrIfs->setTimeout(REQ_TIMEOUT);
+        imageIfs.reset(new OrgDeepinAiDaemonSessionImageRecognitionInterface(OrgDeepinAiDaemonSessionManagerInterface::staticInterfaceName(), sessionPath, con));
+        imageIfs->setTimeout(REQ_TIMEOUT);
     }
 
-    return ocrIfs->isValid();
+    return imageIfs->isValid();
 }
 
-QString DOCRRecognitionPrivate::packageParams(const QVariantHash &params)
+QString DImageRecognitionPrivate::packageParams(const QVariantHash &params)
 {
     QVariantHash root;
     
@@ -64,27 +65,39 @@ QString DOCRRecognitionPrivate::packageParams(const QVariantHash &params)
     return ret;
 }
 
-// Note: Removed async signal handlers since using synchronous interface
 
-DOCRRecognition::DOCRRecognition(QObject *parent)
+
+DImageRecognition::DImageRecognition(QObject *parent)
     : QObject(parent)
-    , d(new DOCRRecognitionPrivate(this))
+    , d(new DImageRecognitionPrivate(this))
 {
 }
 
-DOCRRecognition::~DOCRRecognition()
+DImageRecognition::~DImageRecognition()
 {
 }
 
-QString DOCRRecognition::recognizeFile(const QString &imageFile, const QVariantHash &params)
+QString DImageRecognition::recognizeImage(const QString &imagePath, const QString &prompt, const QVariantHash &params)
 {
     if (!d->ensureServer()) {
         d->error = DError(AIErrorCode::APIServerNotAvailable, "");
         return QString();
     }
     
-    if (imageFile.isEmpty()) {
-        d->error = DError(AIErrorCode::InvalidParameter, "Empty image file path");
+    if (imagePath.isEmpty()) {
+        d->error = DError(AIErrorCode::InvalidParameter, "Empty image path");
+        return QString();
+    }
+    
+    // Add path security check
+    QFileInfo fileInfo(imagePath);
+    if (!fileInfo.isAbsolute()) {
+        d->error = DError(AIErrorCode::InvalidParameter, "Relative path not allowed for security reasons");
+        return QString();
+    }
+    
+    if (!fileInfo.exists()) {
+        d->error = DError(AIErrorCode::InvalidParameter, "Image file does not exist");
         return QString();
     }
     
@@ -92,7 +105,7 @@ QString DOCRRecognition::recognizeFile(const QString &imageFile, const QVariantH
     d->running = true;
     d->error = DError();
     
-    QString ret = d->ocrIfs->recognizeFile(imageFile, d->packageParams(params));
+    QString ret = d->imageIfs->recognizeImage(imagePath, prompt, d->packageParams(params));
     
     // Parse result
     QJsonParseError error;
@@ -113,10 +126,10 @@ QString DOCRRecognition::recognizeFile(const QString &imageFile, const QVariantH
     }
     
     d->running = false;
-    return obj["text"].toString();
+    return obj["content"].toString();
 }
 
-QString DOCRRecognition::recognizeImage(const QByteArray &imageData, const QVariantHash &params)
+QString DImageRecognition::recognizeImageData(const QByteArray &imageData, const QString &prompt, const QVariantHash &params)
 {
     if (!d->ensureServer()) {
         d->error = DError(AIErrorCode::APIServerNotAvailable, "");
@@ -132,7 +145,7 @@ QString DOCRRecognition::recognizeImage(const QByteArray &imageData, const QVari
     d->running = true;
     d->error = DError();
     
-    QString ret = d->ocrIfs->recognizeImage(imageData, d->packageParams(params));
+    QString ret = d->imageIfs->recognizeImageData(imageData, prompt, d->packageParams(params));
     
     // Parse result
     QJsonParseError error;
@@ -153,23 +166,18 @@ QString DOCRRecognition::recognizeImage(const QByteArray &imageData, const QVari
     }
     
     d->running = false;
-    return obj["text"].toString();
+    return obj["content"].toString();
 }
 
-QString DOCRRecognition::recognizeRegion(const QString &imageFile, const QString &region, const QVariantHash &params)
+QString DImageRecognition::recognizeImageUrl(const QString &imageUrl, const QString &prompt, const QVariantHash &params)
 {
     if (!d->ensureServer()) {
         d->error = DError(AIErrorCode::APIServerNotAvailable, "");
         return QString();
     }
     
-    if (imageFile.isEmpty()) {
-        d->error = DError(AIErrorCode::InvalidParameter, "Empty image file path");
-        return QString();
-    }
-    
-    if (region.isEmpty()) {
-        d->error = DError(AIErrorCode::InvalidParameter, "Empty region");
+    if (imageUrl.isEmpty()) {
+        d->error = DError(AIErrorCode::InvalidParameter, "Empty image URL");
         return QString();
     }
     
@@ -177,7 +185,7 @@ QString DOCRRecognition::recognizeRegion(const QString &imageFile, const QString
     d->running = true;
     d->error = DError();
     
-    QString ret = d->ocrIfs->recognizeRegion(imageFile, region, d->packageParams(params));
+    QString ret = d->imageIfs->recognizeImageUrl(imageUrl, prompt, d->packageParams(params));
     
     // Parse result
     QJsonParseError error;
@@ -198,67 +206,42 @@ QString DOCRRecognition::recognizeRegion(const QString &imageFile, const QString
     }
     
     d->running = false;
-    return obj["text"].toString();
+    return obj["content"].toString();
 }
 
-QString DOCRRecognition::recognizeRegion(const QString &imageFile, const QRect &region, const QVariantHash &params)
-{
-    // Convert QRect to string format: "x,y,width,height"
-    QString regionStr = QString("%1,%2,%3,%4")
-                        .arg(region.x())
-                        .arg(region.y())
-                        .arg(region.width())
-                        .arg(region.height());
-    
-    return recognizeRegion(imageFile, regionStr, params);
-}
-
-QStringList DOCRRecognition::getSupportedLanguages()
+QStringList DImageRecognition::getSupportedImageFormats()
 {
     if (!d->ensureServer()) {
         d->error = DError(AIErrorCode::APIServerNotAvailable, "");
         return QStringList();
     }
     
-    return d->ocrIfs->getSupportedLanguages();
+    return d->imageIfs->getSupportedImageFormats();
 }
 
-QStringList DOCRRecognition::getSupportedFormats()
+int DImageRecognition::getMaxImageSize()
 {
     if (!d->ensureServer()) {
         d->error = DError(AIErrorCode::APIServerNotAvailable, "");
-        return QStringList();
+        return 0;
     }
     
-    return d->ocrIfs->getSupportedFormats();
+    return d->imageIfs->getMaxImageSize();
 }
 
-QString DOCRRecognition::getCapabilities()
+void DImageRecognition::terminate()
 {
-    if (!d->ensureServer()) {
-        d->error = DError(AIErrorCode::APIServerNotAvailable, "");
-        return QString();
-    }
-    
-    return d->ocrIfs->getCapabilities();
-}
-
-// Note: cancel method removed - not applicable for synchronous interface
-
-void DOCRRecognition::terminate()
-{
-    if (d->ocrIfs)
-        d->ocrIfs->terminate();
+    if (d->imageIfs)
+        d->imageIfs->terminate();
         
     QMutexLocker lk(&d->mtx);
     d->running = false;
 }
 
-DError DOCRRecognition::lastError() const
+DError DImageRecognition::lastError() const
 {
     return d->error;
 }
 
-DAI_END_NAMESPACE
+#include "dimagerecognition.moc"
 
-#include "docrrecognition.moc"

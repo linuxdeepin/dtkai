@@ -27,14 +27,6 @@ public:
     ImageRecognitionDemo(QObject *parent = nullptr) : QObject(parent)
     {
         imageRecognition.reset(new DImageRecognition(this));
-        
-        // Connect signals
-        connect(imageRecognition.data(), &DImageRecognition::recognitionResult,
-                this, &ImageRecognitionDemo::onRecognitionResult);
-        connect(imageRecognition.data(), &DImageRecognition::recognitionError,
-                this, &ImageRecognitionDemo::onRecognitionError);
-        connect(imageRecognition.data(), &DImageRecognition::recognitionCompleted,
-                this, &ImageRecognitionDemo::onRecognitionCompleted);
     }
 
     ~ImageRecognitionDemo()
@@ -62,22 +54,6 @@ public Q_SLOTS:
             qInfo() << "=== Demo 完成 ===";
             qApp->quit();
         });
-    }
-
-private Q_SLOTS:
-    void onRecognitionResult(const QString &result)
-    {
-        qInfo() << "✓ 识别结果接收:" << result;
-    }
-
-    void onRecognitionError(int errorCode, const QString &errorMessage)
-    {
-        qWarning() << "✗ 识别错误:" << errorCode << errorMessage;
-    }
-
-    void onRecognitionCompleted(const QString &finalResult)
-    {
-        qInfo() << "✅ 识别完成:" << finalResult;
     }
 
 private:

@@ -12,7 +12,7 @@
 DCORE_USE_NAMESPACE
 DAI_USE_NAMESPACE
 
-#define RECOGNITION_TIMEOUT 5 * 60 * 1000
+#define RECOGNITION_TIMEOUT 30 * 1000  // 30 seconds 
 #define REQ_TIMEOUT  10 * 1000
 
 DSpeechToTextPrivate::DSpeechToTextPrivate(DSpeechToText *parent)

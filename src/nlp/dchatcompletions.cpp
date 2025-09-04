@@ -12,7 +12,7 @@
 DCORE_USE_NAMESPACE
 DAI_USE_NAMESPACE
 
-#define CHAT_TIMEOUT 5 * 60 * 1000
+#define CHAT_TIMEOUT 30 * 1000  
 #define REQ_TIMEOUT  10 * 1000
 
 DChatCompletionsPrivate::DChatCompletionsPrivate(DChatCompletions *parent)

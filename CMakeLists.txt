@@ -41,10 +41,11 @@ endif()
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(BUILD_EXAMPLES ON)
+    set(BUILD_TESTING ON)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
 endif()
 
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core DBus)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core DBus Test)
 find_package(Dtk${DTK_VERSION_MAJOR} REQUIRED Core)
 add_compile_definitions(QT_NO_SIGNALS_SLOTS_KEYWORDS)
 
@@ -54,4 +55,10 @@ add_subdirectory(src)
 # example
 if (BUILD_EXAMPLES)
     add_subdirectory(examples)
+endif()
+
+# test
+if (BUILD_TESTING)
+    enable_testing()
+    add_subdirectory(tests)
 endif()

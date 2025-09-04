@@ -12,7 +12,7 @@
 DCORE_USE_NAMESPACE
 DAI_USE_NAMESPACE
 
-#define SYNTHESIS_TIMEOUT 5 * 60 * 1000
+#define SYNTHESIS_TIMEOUT 30 * 1000  // 30 seconds
 #define REQ_TIMEOUT  10 * 1000
 
 DTextToSpeechPrivate::DTextToSpeechPrivate(DTextToSpeech *parent)

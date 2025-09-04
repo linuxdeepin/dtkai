@@ -6,6 +6,8 @@ set(BIN_NAME dtkai)
 
 file(GLOB_RECURSE INCLUDE_FILES "${PROJECT_SOURCE_DIR}/include/${BIN_NAME}/*")
 file(GLOB_RECURSE SRCS
+    "*.h"
+    "*.cpp"
     "*/*.h"
     "*/*.cpp"
 )

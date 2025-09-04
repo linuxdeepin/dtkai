@@ -5,10 +5,10 @@
 #ifndef DTEXTTOSPEECH_H
 #define DTEXTTOSPEECH_H
 
-#include <DError>
-
 #include "dtkai_global.h"
 #include "dtkaitypes.h"
+
+#include <DError>
 
 #include <QObject>
 #include <QScopedPointer>
@@ -37,7 +37,6 @@ public:
     
     // Information methods
     QStringList getSupportedVoices();
-    QString getProviderInfo();
     
     // Error handling
     DTK_CORE_NAMESPACE::DError lastError() const;

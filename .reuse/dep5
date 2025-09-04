@@ -48,6 +48,26 @@ Files: assets/images/tests/*
 Copyright: UnionTech Software Technology Co., Ltd.
 License: CC0-1.0
 
+# Test scripts
+Files: test-coverage.sh *.sh
+Copyright: UnionTech Software Technology Co., Ltd.
+License: LGPL-3.0-or-later
+
+# Test files and framework
+Files: tests/* tests/unit/* tests/common/* tests/CMakeLists.txt
+Copyright: UnionTech Software Technology Co., Ltd.
+License: LGPL-3.0-or-later
+
+# Third-party test libraries (cpp-stub)
+Files: tests/3rdparty/cpp-stub/*
+Copyright: coolxv
+License: MIT
+
+# Third-party test extensions (stub-ext)
+Files: tests/3rdparty/stub-ext/*
+Copyright: UnionTech Software Technology Co., Ltd.
+License: LGPL-3.0-or-later
+
 Files: 3rdparty/aidaemon/* include/dtkai/*
 Copyright: UnionTech Software Technology Co., Ltd.
 License: LGPL-3.0-or-later

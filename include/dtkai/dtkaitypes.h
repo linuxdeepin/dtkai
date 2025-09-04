@@ -5,9 +5,9 @@
 #ifndef DTKAITYPES_H
 #define DTKAITYPES_H
 
-#include <QString>
-
 #include "dtkai_global.h"
+
+#include <QString>
 
 DAI_BEGIN_NAMESPACE
 

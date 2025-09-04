@@ -5,10 +5,10 @@
 #ifndef DCHATCOMPLETIONS_H
 #define DCHATCOMPLETIONS_H
 
-#include <DError>
-
 #include "dtkai_global.h"
 #include "dtkaitypes.h"
+
+#include <DError>
 
 #include <QObject>
 #include <QScopedPointer>

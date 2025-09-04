@@ -7,7 +7,7 @@
 
 
 #include "dtkai_global.h"
-#include "derror.h"
+#include <DError>
 
 #include <QObject>
 #include <QVariantHash>
@@ -48,12 +48,6 @@ public:
     
     // Control methods
     void terminate();
-    
-Q_SIGNALS:
-    // Result signals for asynchronous operations (future extension)
-    void recognitionResult(const QString &result);
-    void recognitionError(int errorCode, const QString &message);
-    void recognitionCompleted(const QString &finalResult);
     
 private:
     QScopedPointer<DImageRecognitionPrivate> d;

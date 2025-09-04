@@ -87,11 +87,6 @@ private Q_SLOTS:
     void onSynthesisError(int errorCode, const QString &errorMessage);
     void onSynthesisCompleted(const QByteArray &finalAudio);
 
-    // Image Recognition slots
-    void onImageRecognitionResult(const QString &result);
-    void onImageRecognitionError(int errorCode, const QString &errorMessage);
-    void onImageRecognitionCompleted(const QString &finalResult);
-
     // Audio playback slots
     void onAudioStateChanged(QAudio::State state);
 
@@ -208,14 +203,6 @@ PresentationDemo::PresentationDemo(QObject *parent)
             this, &PresentationDemo::onSynthesisError);
     connect(tts, &DTextToSpeech::synthesisCompleted,
             this, &PresentationDemo::onSynthesisCompleted);
-
-    // Connect Image Recognition signals
-    connect(imageRecognition, &DImageRecognition::recognitionResult,
-            this, &PresentationDemo::onImageRecognitionResult);
-    connect(imageRecognition, &DImageRecognition::recognitionError,
-            this, &PresentationDemo::onImageRecognitionError);
-    connect(imageRecognition, &DImageRecognition::recognitionCompleted,
-            this, &PresentationDemo::onImageRecognitionCompleted);
 
     // Setup audio format (16kHz, 16-bit, mono)
     audioFormat.setSampleRate(16000);
@@ -813,24 +800,6 @@ void PresentationDemo::onSynthesisCompleted(const QByteArray &/*finalAudio*/)
         speechCompleted = true;
         isWaitingForSpeech = false;
     }
-}
-
-void PresentationDemo::onImageRecognitionResult(const QString &result)
-{
-    displayStatus("👁️ Image Recognition", "✓ Result Received", result);
-}
-
-void PresentationDemo::onImageRecognitionError(int errorCode, const QString &errorMessage)
-{
-    displayStatus("👁️ Image Recognition", "❌ Error",
-                  QString("Code: %1, Message: %2").arg(errorCode).arg(errorMessage));
-    visionCompleted = true;
-}
-
-void PresentationDemo::onImageRecognitionCompleted(const QString &finalResult)
-{
-    displayStatus("👁️ Image Recognition", "✅ Completed", finalResult);
-    visionCompleted = true;
 }
 
 void PresentationDemo::playAudioFile(const QString &filename)
