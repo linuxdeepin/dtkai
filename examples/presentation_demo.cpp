@@ -21,6 +21,7 @@
 #include <DTextToSpeech>
 #include <DChatCompletions>
 #include <DImageRecognition>
+#include <DAIError>
 
 #include <QCoreApplication>
 #include <QTimer>
@@ -45,6 +46,7 @@
 #include <QTextStream>
 #include <QDir>
 #include <functional>
+#include <iostream>
 
 DCORE_USE_NAMESPACE
 DAI_USE_NAMESPACE
@@ -412,9 +414,9 @@ void PresentationDemo::initializeTaskQueue()
             isAudioPlaying = false;
             isSynthesisCompleted = false;
             QString introText = "接下来我将演示图像识别功能。"
-                               "我将分析指定的图片，"
-                               "然后告诉您图片中包含的内容。"
-                               "让我来看看这张图片。";
+                               "您可以输入任意图片的路径，"
+                               "我将分析图片内容并为您详细描述。"
+                               "请准备好要分析的图片路径。";
             displayStatus("👁️ Step 4", "🔊 Speaking", "Vision Demo Introduction");
             speakText(introText);
         },
@@ -436,7 +438,27 @@ void PresentationDemo::initializeTaskQueue()
             isAudioPlaying = false;
             isSynthesisCompleted = false;
             
-            QString imagePath = "/home/ut000824@uos/Desktop/temp/images.jpeg";
+            // 获取用户输入的图片路径，循环直到输入正确路径
+            QString imagePath;
+            bool validPath = false;
+            
+            while (!validPath) {
+                qInfo() << "📁 请输入要分析的图片路径:";
+                std::string inputPath;
+                std::getline(std::cin, inputPath);
+                imagePath = QString::fromStdString(inputPath).trimmed();
+                                
+                // 检查文件是否存在
+                QFile file(imagePath);
+                if (file.exists()) {
+                    validPath = true;
+                    qInfo() << "✅ 图片文件存在:" << imagePath;
+                } else {
+                    qWarning() << "❌ 图片文件不存在:" << imagePath;
+                    std::cout << "❌ 文件不存在，请重新输入图片路径（或直接按回车使用默认演示图片）: ";
+                }
+            }
+            
             QString prompt = "请详细描述这张图片的内容，包括看到了什么物体、场景、人物或文字等。";
             
             displayStatus("👁️ Vision Processing", "🔄 Analyzing", imagePath);
@@ -444,7 +466,7 @@ void PresentationDemo::initializeTaskQueue()
             QString result = imageRecognition->recognizeImage(imagePath, prompt);
             auto error = imageRecognition->lastError();
             
-            if (error.getErrorCode() != -1) {
+            if (error.getErrorCode() != NoError) {
                 qWarning() << "图像识别失败:" << error.getErrorCode() << error.getErrorMessage();
                 currentSpeechText = "很抱歉，我无法分析这张图片。"
                                    "可能是图片文件不存在或者图像识别服务暂时不可用。"
