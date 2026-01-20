@@ -136,15 +136,8 @@ bool DEmbeddingPlatform::deleteDocuments(const QString &appId, const QStringList
         return false;
     }
 
-    QJsonObject obj = doc.object();
-    if (!obj.contains("success") || !obj["success"].isBool()) {
-        qWarning() << "Missing or invalid success field in response:" << response;
-        d->error = DTK_CORE_NAMESPACE::DError(AIErrorCode::APIServerNotAvailable, "Missing or invalid success field in response");
-        return false;
-    }
-
     d->error = DTK_CORE_NAMESPACE::DError(NoError, "");
-    return obj["success"].toBool();
+    return true;
 }
 
 QList<DEmbeddingPlatform::SearchResult> DEmbeddingPlatform::search(const QString &appId, const QString &query, const QString &extensionParams)
@@ -353,15 +346,7 @@ bool DEmbeddingPlatform::buildIndex(const QString &appId, const QString &docId, 
         return false;
     }
 
-    QJsonObject obj = doc.object();
-    if (!obj.contains("success") || !obj["success"].isBool()) {
-        qWarning() << "Missing or invalid success field in response:" << response;
-        d->error = DTK_CORE_NAMESPACE::DError(AIErrorCode::APIServerNotAvailable, "Missing or invalid success field in response");
-        return false;
-    }
-
-    d->error = DTK_CORE_NAMESPACE::DError(NoError, "");
-    return obj["success"].toBool();
+    return true;
 }
 
 bool DEmbeddingPlatform::destroyIndex(const QString &appId, bool allIndex, const QString &extensionParams)

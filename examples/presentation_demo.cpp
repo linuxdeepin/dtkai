@@ -1,21 +1,6 @@
-// SPDX-FileCopyrightText: 2025 UnionTech Software Technology Co., Ltd.
+// SPDX-FileCopyrightText: 2025 ~ 2026 UnionTech Software Technology Co., Ltd.
 //
 // SPDX-License-Identifier: LGPL-3.0-or-later
-
-/**
- * @file presentation_demo.cpp
- * @brief Comprehensive AI Presentation Demo for Deepin System Assistant
- *
- * This demo demonstrates the integration of Speech-to-Text, Text-to-Speech,
- * NLP Chat, and Image Recognition capabilities in a sequential presentation format.
- *
- * Presentation Steps:
- * 1. Welcome and introduction (TTS)
- * 2. NLP demonstration - Deepin desktop background setting (TTS + Chat)
- * 3. Speech recognition demonstration (STT)
- * 4. Vision demonstration - Image analysis (TTS + Vision)
- * 5. Summary of demonstration (TTS)
- */
 
 #include <DSpeechToText>
 #include <DTextToSpeech>
@@ -45,6 +30,7 @@
 #include <QFile>
 #include <QTextStream>
 #include <QDir>
+
 #include <functional>
 #include <iostream>
 
@@ -58,7 +44,7 @@ struct PresentationTask {
     std::function<void()> executeFunction;
     std::function<bool()> completionChecker;
     
-    PresentationTask(const QString &id, const QString &desc, 
+    PresentationTask(const QString &id, const QString &desc,
                     std::function<void()> exec, std::function<bool()> checker)
         : taskId(id), description(desc), executeFunction(exec), completionChecker(checker) {}
 };
@@ -323,9 +309,8 @@ void PresentationDemo::initializeTaskQueue()
             speechCompleted = false;
             isAudioPlaying = false;
             isSynthesisCompleted = false;
-            QString introText = "接下来我将演示自然语言处理功能。"
-                               "我可以回答关于deepin系统的各种问题。"
-                               "现在让我来回答一个常见问题：如何设置桌面背景。";
+            QString introText = "接下来我将演示 NLP 自然语言处理功能。"
+                               "请输入你的问题：";
             displayStatus("🤖 Step 2", "🔊 Speaking", "NLP Demo Introduction");
             speakText(introText);
         },
@@ -347,19 +332,44 @@ void PresentationDemo::initializeTaskQueue()
             isAudioPlaying = false;
             isSynthesisCompleted = false;
             
-            QString question = "deepin系统如何设置桌面背景？";
+            // 获取用户输入的问题
+            qInfo() << "🤔 请输入您想问的问题：";
+            std::string userInput;
+            std::getline(std::cin, userInput);
+            QString question = QString::fromStdString(userInput).trimmed();
+            
+            // 如果用户没有输入任何内容，使用默认问题
+            if (question.isEmpty()) {
+                question = "deepin系统如何设置桌面背景？";
+                qInfo() << "ℹ️  使用默认问题：" << question;
+            }
+            
             displayStatus("🤖 NLP Processing", "🔄 Processing", question);
 
-            currentSpeechText = "要设置deepin系统的桌面背景，您可以按照以下步骤操作：\n"
-                               "第一步，右键点击桌面空白区域，选择\"个性化\"选项。\n"
-                               "第二步，在打开的窗口中，您可以选择系统预设的壁纸。"
-                               "这样就成功设置了您的桌面背景。";
-
-            QTimer::singleShot(200, [this]() {
-                displayResult("🤖 NLP Response", currentSpeechText);
-                chatCompleted = true;
-                speakText(currentSpeechText);
-            });
+            // 调用大模型获取回答
+            QString response = chat->chat(question);
+            auto error = chat->lastError();
+            
+            if (error.getErrorCode() != NoError) {
+                qWarning() << "❌ 大模型调用失败:" << error.getErrorCode() << error.getErrorMessage();
+                response = "很抱歉，我无法回答这个问题。可能是网络连接问题或AI服务暂时不可用。";
+            } else if (response.isEmpty()) {
+                response = "很抱歉，我没有找到相关答案。";
+            }
+            
+#ifdef QT_DEBUG
+            int responseLimit = 50;
+#else
+            int responseLimit = 100;
+#endif
+            if (response.length() > responseLimit) {
+                response = response.left(responseLimit) + "由于回答太长，已为您省略后续回答";
+            }
+            
+            displayResult("🤖 NLP Response", response);
+            currentSpeechText = response;
+            chatCompleted = true;
+            speakText(response);
         },
         [this]() { 
             // 确保NLP处理完成、语音合成完成且音频播放也完成
@@ -377,7 +387,7 @@ void PresentationDemo::initializeTaskQueue()
             speechCompleted = false;
             isAudioPlaying = false;
             isSynthesisCompleted = false;
-            QString introText = "现在我将演示语音识别功能。"
+            QString introText = "现在我将演示speech语音识别功能。"
                                "请您对着麦克风说一段话，"
                                "我将把您的语音转换成文字显示出来。"
                                "我现在开始监听您的语音输入。";
@@ -413,7 +423,7 @@ void PresentationDemo::initializeTaskQueue()
             speechCompleted = false;
             isAudioPlaying = false;
             isSynthesisCompleted = false;
-            QString introText = "接下来我将演示图像识别功能。"
+            QString introText = "接下来我将演示vision图像识别功能。"
                                "您可以输入任意图片的路径，"
                                "我将分析图片内容并为您详细描述。"
                                "请准备好要分析的图片路径。";
@@ -500,13 +510,11 @@ void PresentationDemo::initializeTaskQueue()
             isAudioPlaying = false;
             isSynthesisCompleted = false;
             QString summaryText = "今天的演示到此结束。"
-                                 "我为大家展示了deepin系统AI助手的四大核心功能：\n"
-                                 "第一，自然语言处理功能，我可以理解并回答各种关于deepin系统的问题。"
+                                 "我为大家展示了Deepin AI SDK四大核心功能：\n"
+                                 "第一，自然语言处理功能，我可以理解并回答各种问题。"
                                  "第二，语音识别功能，我能够准确地将您的语音转换成文字。"
                                  "第三，图像识别功能，我可以分析图片内容并提供详细描述。"
                                  "第四，语音合成功能，我能够将文字转换成自然的语音。"
-                                 "作为deepin系统的AI电脑管家，"
-                                 "我将竭诚为用户提供智能、便捷的系统管理和技术支持服务。"
                                  "谢谢大家观看今天的演示！";
             displayStatus("📝 Step 5", "🔊 Speaking", "Presentation Summary");
             speakText(summaryText);
@@ -580,12 +588,7 @@ void PresentationDemo::completeCurrentTask()
 
 void PresentationDemo::step1_Welcome()
 {
-    QString welcomeText = "大家好！我是deepin系统的AI电脑管家。"
-                         "我可以帮助用户解决各种系统问题，"
-                         "包括系统设置、故障诊断、使用指导等。"
-                         "今天我将为大家演示我的核心功能，"
-                         "包括自然语言处理、语音识别和图像识别能力。"
-                         "让我们开始这次演示吧！";
+    QString welcomeText = "大家好！我是deepin AI SDK,提供nlp、speech、vision等AI接口。";
 
     displayStatus("👋 Step 1", "🔊 Speaking", "Welcome and Introduction");
     speakText(welcomeText);

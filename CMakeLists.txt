@@ -32,12 +32,15 @@ endif ()
 
 set(CMAKE_CXX_FLAGS Release CACHE STRING "define CXXFLAGS")
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core)
-message("Using Qt version: ${QT_VERSION_MAJOR}")
-
-if(QT_VERSION_MAJOR EQUAL "6")
+find_package(Qt6 COMPONENTS Core QUIET)
+if(Qt6_FOUND)
     set(DTK_VERSION_MAJOR 6)
+    set(QT_VERSION_MAJOR 6)
+else()
+    find_package(Qt5 REQUIRED COMPONENTS Core)
+    set(QT_VERSION_MAJOR 5)
 endif()
+message("Using Qt version: ${QT_VERSION_MAJOR}")
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(BUILD_EXAMPLES ON)

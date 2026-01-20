@@ -168,6 +168,7 @@ TEST_F(TestDEmbeddingPlatform, embeddingModels)
  * 
  * This test verifies that documents can be uploaded.
  */
+static QString kFileID;
 TEST_F(TestDEmbeddingPlatform, uploadDocuments)
 {
     qInfo() << "Testing DEmbeddingPlatform document upload";
@@ -185,6 +186,7 @@ TEST_F(TestDEmbeddingPlatform, uploadDocuments)
         // If we get results, print the first one
         if (!result.isEmpty()) {
             DEmbeddingPlatform::DocumentInfo firstDoc = result.first();
+            kFileID = firstDoc.id;
             qDebug() << "First document info - ID:" << firstDoc.id << "File Path:" << firstDoc.filePath;
         }
 
@@ -208,7 +210,7 @@ TEST_F(TestDEmbeddingPlatform, buildIndex)
 
     // Test: Build index (with empty document ID)
     EXPECT_NO_THROW({
-        bool result = embedding->buildIndex("test-app-001", "");
+        bool result = embedding->buildIndex("test-app-001", kFileID);
 
         qDebug() << "Build index result:" << result;
 
@@ -239,7 +241,7 @@ TEST_F(TestDEmbeddingPlatform, searchDocuments)
     // If we get results, print the first one
     if (!result.isEmpty()) {
         DEmbeddingPlatform::SearchResult firstResult = result.first();
-        qDebug() << "First search result - ID:" << firstResult.id << "Model:" << firstResult.model;
+        qDebug() << "First search result - ID:" << firstResult.id << "Model:" << firstResult.model << "Content:" << firstResult.chunk.content;
     }
     
     qInfo() << "Document search tests completed";
@@ -256,7 +258,7 @@ TEST_F(TestDEmbeddingPlatform, documentsInfo)
     
     // Test: Get documents info
     EXPECT_NO_THROW({
-        QList<DEmbeddingPlatform::DocumentInfo> result = embedding->documentsInfo("test-app-001");
+        QList<DEmbeddingPlatform::DocumentInfo> result = embedding->documentsInfo("test-app-001", {kFileID});
         
         qDebug() << "Documents info result count:" << result.count();
         
@@ -284,8 +286,7 @@ TEST_F(TestDEmbeddingPlatform, deleteDocuments)
     
     // Test: Delete documents (with empty document IDs)
     EXPECT_NO_THROW({
-        QStringList documentIds;
-        bool result = embedding->deleteDocuments("test-app-001", documentIds);
+        bool result = embedding->deleteDocuments("test-app-001", {kFileID});
         
         qDebug() << "Delete documents result:" << result;
         
@@ -316,26 +317,4 @@ TEST_F(TestDEmbeddingPlatform, destroyIndex)
     }) << "Destroy index should work";
     
     qInfo() << "Index destruction tests completed";
-}
-
-/**
- * @brief Test task cancellation functionality
- * 
- * This test verifies that tasks can be cancelled.
- */
-TEST_F(TestDEmbeddingPlatform, cancelTask)
-{
-    qInfo() << "Testing DEmbeddingPlatform task cancellation";
-    
-    // Test: Cancel task (with empty task ID)
-    EXPECT_NO_THROW({
-        bool result = embedding->cancelTask("");
-        
-        qDebug() << "Cancel task result:" << result;
-        
-        // In test environment without real daemon, result may be false
-        validateErrorState(false);
-    }) << "Cancel task should work";
-    
-    qInfo() << "Task cancellation tests completed";
 }

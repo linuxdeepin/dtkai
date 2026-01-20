@@ -1,1 +1,3 @@
 usr/lib/*/libdtkai.so*
+usr/bin/dtkaivalidator
+
