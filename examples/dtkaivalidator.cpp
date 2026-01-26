@@ -37,6 +37,8 @@
 
 #include <iostream>
 #include <algorithm>
+#include <termios.h>
+#include <unistd.h>
 
 DCORE_USE_NAMESPACE
 DAI_USE_NAMESPACE
@@ -44,6 +46,66 @@ DAI_USE_NAMESPACE
 void waitReturn() {
     std::cout << "\n按回车返回主菜单...";
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+}
+
+/**
+ * Support Chinese input
+ * 1. Disable ICANON (canonical mode) and ECHO (automatic echoing) to take full control of I/O.
+ * 2. Identify backspace keys (127/8).
+ * 3. For UTF-8 multi-byte characters (Chinese), determine the byte sequence and pop the entire character from the buffer at once.
+ * 4. Key: Chinese characters visually occupy 2 columns. When deleting Chinese, send "\b \b\b \b" (backspace-erase twice) to ensure no visual artifacts remain on screen.
+ */
+bool getChineseInput(std::string &input, const std::string &prompt = "") {
+    if (!prompt.empty()) {
+        std::cout << prompt;
+        std::cout.flush();
+    }
+
+    struct termios oldt, newt;
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON | ECHO);
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+
+    input.clear();
+    char ch;
+    while (true) {
+        if (read(STDIN_FILENO, &ch, 1) <= 0) break;
+
+        if (ch == '\n' || ch == '\r') {
+            std::cout << std::endl;
+            break;
+        } else if (ch == 127 || ch == 8) { // Backspace
+            if (!input.empty()) {
+                // Check if it is a UTF-8 multi-byte character
+                if ((unsigned char)input.back() < 0x80) {
+                    // ASCII
+                    input.pop_back();
+                    std::cout << "\b \b" << std::flush;
+                } else {
+                    // Handle UTF-8 (Chinese characters are typically 3 bytes)
+                    // Pop all subsequent bytes starting with 10xxxxxx
+                    while (!input.empty() && ((unsigned char)input.back() & 0xC0) == 0x80) {
+                        input.pop_back();
+                    }
+                    // Pop the leading byte (11xxxxxx)
+                    if (!input.empty()) input.pop_back();
+
+                    // Chinese characters occupy 2 character widths in the terminal, so backspace twice and clear
+                    std::cout << "\b \b\b \b" << std::flush;
+                }
+            }
+        } else if (ch == 3) { // Ctrl+C
+            tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+            exit(0);
+        } else {
+            input += ch;
+            std::cout << ch << std::flush;
+        }
+    }
+
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    return !input.empty() || ch == '\n';
 }
 
 void nlp_demo() {
@@ -68,9 +130,10 @@ void nlp_demo() {
     while (true) {
         response.clear();
 
-        std::cout << "Q: ";
-        if (!std::getline(std::cin, prompt))
+        if (!getChineseInput(prompt, "Q: "))
             break;
+
+        if (prompt.empty()) continue;
 
         std::string lowerPrompt = prompt;
         std::transform(lowerPrompt.begin(), lowerPrompt.end(), lowerPrompt.begin(), ::tolower);
@@ -81,8 +144,6 @@ void nlp_demo() {
             std::cout << "历史已清空\n";
             continue;
         }
-        if (prompt.empty())
-            continue;
 
         QString content = QString::fromStdString(prompt);
 
@@ -186,9 +247,8 @@ void stt_demo() {
 
 void tts_demo() {
     DTextToSpeech tts;
-    std::cout << "\n【语音合成 Demo】请输入要合成的文本：";
     std::string text;
-    if (!std::getline(std::cin, text) || text.empty())
+    if (!getChineseInput(text, "\n【语音合成 Demo】请输入要合成的文本：") || text.empty())
         text = "你好，有什么可以帮您！";
 
     QVariantHash params;
@@ -283,9 +343,8 @@ void tts_demo() {
 
 void vision_demo() {
     DImageRecognition vision;
-    std::cout << "\n【图像识别 Demo】请输入图片路径：";
     std::string path;
-    if (!std::getline(std::cin, path)) return;
+    if (!getChineseInput(path, "\n【图像识别 Demo】请输入图片路径：")) return;
     QString imagePath = QString::fromStdString(path).trimmed();
     if (!QFile::exists(imagePath)) {
         std::cout << "文件不存在。" << std::endl;
@@ -304,9 +363,8 @@ void vision_demo() {
 
 void ocr_demo() {
     DOCRRecognition ocr;
-    std::cout << "\n【OCR文字识别 Demo】请输入图片路径：";
     std::string path;
-    if (!std::getline(std::cin, path)) return;
+    if (!getChineseInput(path, "\n【OCR文字识别 Demo】请输入图片路径：")) return;
     QString imagePath = QString::fromStdString(path).trimmed();
 
     if (!QFile::exists(imagePath)) {
@@ -329,14 +387,13 @@ void ocr_demo() {
 }
 
 void print_menu() {
-    std::cout << "\n========= DTK AI Demo (Qt5/Qt6 Dual) =========\n";
+    std::cout << "\n========= DTK AI Demo =========\n";
     std::cout << "1. NLP 问答\n";
     std::cout << "2. 语音识别 (STT)\n";
     std::cout << "3. 语音合成 (TTS)\n";
     std::cout << "4. 图像识别\n";
     std::cout << "5. OCR文字识别\n";
     std::cout << "0. 退出\n";
-    std::cout << "选择功能: ";
 }
 
 int main(int argc, char *argv[])
@@ -346,7 +403,10 @@ int main(int argc, char *argv[])
     while (true) {
         print_menu();
         std::string choice;
-        if (!std::getline(std::cin, choice)) break;
+        if (!getChineseInput(choice, "选择功能: ")) {
+            continue;
+        }
+
         if (choice == "1") nlp_demo();
         else if (choice == "2") stt_demo();
         else if (choice == "3") tts_demo();

@@ -47,7 +47,7 @@ target_link_libraries(${BIN_NAME} PRIVATE
     Qt${QT_VERSION_MAJOR}::Core
     Qt${QT_VERSION_MAJOR}::DBus
     Qt${QT_VERSION_MAJOR}::Test
-    Dtk${DTK_VERSION_MAJOR}::Core
+    Dtk::Core
     dtkai
     ${CMAKE_DL_LIBS}
     pthread
