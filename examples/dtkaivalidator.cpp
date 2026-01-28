@@ -48,6 +48,12 @@ void waitReturn() {
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 }
 
+QString cleanString(std::string &stdString)
+{
+    QString strText = QString::fromStdString(stdString);
+    strText.remove(QChar('\0'));
+    return strText;
+}
 /**
  * Support Chinese input
  * 1. Disable ICANON (canonical mode) and ECHO (automatic echoing) to take full control of I/O.
@@ -145,7 +151,7 @@ void nlp_demo() {
             continue;
         }
 
-        QString content = QString::fromStdString(prompt);
+        QString content = cleanString(prompt);
 
         std::cout << "A: ";
 
@@ -251,6 +257,8 @@ void tts_demo() {
     if (!getChineseInput(text, "\n【语音合成 Demo】请输入要合成的文本：") || text.empty())
         text = "你好，有什么可以帮您！";
 
+    QString strText = cleanString(text);
+
     QVariantHash params;
     params["voice"] = "x4_yezi";
     params["speed"] = 50;
@@ -292,7 +300,8 @@ void tts_demo() {
                      });
 
     std::cout << "开始语音合成..." << std::endl;
-    if (!tts.startStreamSynthesis(QString::fromStdString(text), params)) {
+
+    if (!tts.startStreamSynthesis(strText, params)) {
         auto error = tts.lastError();
         std::cout << "启动失败: " << error.getErrorMessage().toStdString() << std::endl;
         if (audioSink)
